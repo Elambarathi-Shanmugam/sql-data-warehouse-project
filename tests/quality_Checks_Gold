@@ -1,0 +1,35 @@
+
+/*
+========================================================================
+Script Purpose: 
+      To check the data qualities in Gold Layer
+========================================================================
+*/
+========================================================================
+--Duplicate and integrity check for column gender in gold.dim_customers
+========================================================================
+SELECT DISTINCT
+	ci.cst_gndr,
+	ca.gen,
+	CASE WHEN ci.cst_gndr != 'n/a' THEN ci.cst_gndr
+	ELSE COALESCE(ca.gen, 'n/a')
+	END AS new_gen
+FROM silver.crm_cust_info ci
+LEFT JOIN silver.erp_cust_az12 ca
+ON        ci.cst_key = ca.cid
+LEFT JOIN silver.erp_loc_a101 la
+ON        ci.cst_key = la.cid
+ORDER BY 1, 2
+
+
+========================================
+--Foreign key integrity(Dimensions)
+========================================
+SELECT * 
+FROM gold.fact_sales f
+INNER JOIN gold.dim_customers c
+ON c.customer_key = f.customer_key
+ -- For products
+INNER JOIN gold.dim_products p
+ON p.product_key = f.product_key
+WHERE p.product_key IS NULL
